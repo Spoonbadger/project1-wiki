@@ -1,13 +1,25 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from markdown2 import Markdown
 from . import util
 
+
+def edit(request):
+    if request.method == "POST":
+        
+
+
 def entry(request, title):
     content = markdown_to_html(title)
-    return render(request, "encyclopedia/entry.html", {
-        "title": title,
-        "content": content
-    })
+    if content:
+        return render(request, "encyclopedia/entry.html", {
+            "title": title,
+            "content": content,
+        })
+    else:
+        return render(request, "encyclopedia/error.html", {
+            "error": "Page not found"
+        })
+
 
 def index(request):
     return render(request, "encyclopedia/index.html", {
@@ -19,13 +31,37 @@ def markdown_to_html(title):
     # Get the markdown content using the get_entry function in util
     md_file = util.get_entry(title)
     if md_file is None:
-        return redirect("encyclopedia/error.html")
+        return None
     else:
         # Convert to MD to HTML
         markdowner = Markdown()
         return markdowner.convert(md_file)
 
-    
+
+def new_page(request):
+    if request.method == "GET":
+        return render(request, "encyclopedia/new_page.html")
+    else:
+    # If the new_page_title == entry from entries, present error message
+        new_entry_title = request.POST['new_page_title']
+        new_entry_title_lower = new_entry_title.lower()
+        new_content = request.POST['new_content']
+        entries = util.list_entries()
+        for entry in entries:
+            if new_entry_title_lower == entry.lower():
+                return render(request, "encyclopedia/error.html", {
+                    "error": "Page already exists",
+                })
+        util.save_entry(new_entry_title, new_content)
+        new_entry_title = new_entry_title.title()
+        html_content = markdown_to_html(new_entry_title)
+        return render(request, "encyclopedia/entry.html",{
+            "title": new_entry_title,
+            "content": html_content,
+        })
+        
+
+
 def search(request):
     if request.method == "POST":
         # Create a list of all entries
