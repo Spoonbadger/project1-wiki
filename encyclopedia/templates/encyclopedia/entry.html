@@ -8,7 +8,10 @@
     <div>
         {{ content | safe }}
     </div>
+    
     <form action="{% url 'edit' %}" method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="page_title" value="{{ title }}">
         <button type="submit" class="btn btn-primary" style="margin-top: 30px;">Edit</button>
     </form>
 

@@ -1,11 +1,32 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from markdown2 import Markdown
 from . import util
+import random
 
 
 def edit(request):
     if request.method == "POST":
-        
+        title = request.POST['page_title']
+        content = util.get_entry(title)
+        return render(request, "encyclopedia/edit.html", {
+            "title": title,
+            "content": content,
+        })
+    else:
+        return render(request, "encyclopedia/edit.html")
+
+
+def edit_save(request):
+    if request.method == "POST":
+        edited_title = request.POST['edit_page_title']
+        edited_title = edited_title.title()
+        edited_content = request.POST['edit_content']
+        util.save_entry(edited_title, edited_content)
+        edited_html_content = markdown_to_html(edited_title)
+        return render(request, "encyclopedia/entry.html",{
+            "title": edited_title,
+            "content": edited_html_content,
+        })
 
 
 def entry(request, title):
@@ -61,6 +82,15 @@ def new_page(request):
         })
         
 
+def random_page(request):
+    choices = util.list_entries()
+    random_choice = random.choice(choices)
+    html_content = markdown_to_html(random_choice)
+    return render(request, "encyclopedia/entry.html", {
+        "title": random_choice,
+        "content": html_content,
+    })
+
 
 def search(request):
     if request.method == "POST":
@@ -90,4 +120,3 @@ def search(request):
             "matches": matches
         })
     
-
